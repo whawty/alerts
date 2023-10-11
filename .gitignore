@@ -1,0 +1,16 @@
+/whawty-auth
+/cmd/whawty-auth/whawty-auth
+/pam/*.o
+/pam/*.d
+/pam/*.d.*
+/pam/pam_whawty.so
+/sasl/request-fuzz.zip
+/sasl/response-fuzz.zip
+/sasl/examples/decode/decode
+/sasl/examples/encode/encode
+/sasl/examples/marshal/marshal
+/sasl/examples/client/client
+/sasl/examples/server/server
+/contrib/test/
+/vendor/
+.coverprofile
