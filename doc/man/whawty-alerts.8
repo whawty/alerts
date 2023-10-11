@@ -1,0 +1,74 @@
+'\" t
+.\"     Title: whawty-alerts
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/12/2023
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "WHAWTY\-ALERTS" "8" "10/12/2023" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+whawty-alerts \- the simple alert manager
+.SH "SYNOPSIS"
+.sp
+\fBwhawty\-alerts\fR \fI[global options]\fR \fB<command>\fR \fI[command options]\fR \fI[arguments \&... ]\fR
+.SH "DESCRIPTION"
+.sp
+\fBwhawty\-alerts\fR is a simple daemon that handles notifications for monitoring alerts from the Prometheus Alertmanager\&. Notifications can be sent via eMail as well as SMS\&. Unless most other solutions whawty\&.alerts tries to be of use without access to the internet\&. This means sending eMails and SMS is not done using the API of some cloud provider but rather using local resources such as GSM modems connected via USB\&.
+.SH "GLOBAL OPTIONS"
+.sp
+The following global options can be passed to \fBwhawty\-alerts\fR\&.
+.PP
+\fB\-h | \-\-help\fR
+.RS 4
+Show help text and exit\&.
+.RE
+.PP
+\fB\-v | \-\-version\fR
+.RS 4
+Print version information and exit\&.
+.RE
+.SH "COMMANDS"
+.sp
+Any of the following commands supports \fB\-h | \-\-help\fR as an option\&. This will print extra help information for the command\&. All these commands use the auth store directory as specified by the global store configuration file\&.
+.SS "run \fI[options]\fR"
+.sp
+\&...tbd\&...
+.SS "runsa"
+.sp
+This is basically the same as \fBrun\fR but expects all sockets to be passed via systemd socket activation\&. \fBwhawty\-alerts\fR will run the web\-api on all TCP sockets\&. All other socket types are ignored\&.
+.SH "SIGNALS"
+.sp
+On HUP \fBwhawty\-alerts\fR tries to reload the configuration\&. I also runs a basic consistency check\&. If there is any error during that process the old configuration will be kept\&.
+.SH "BUGS"
+.sp
+Most likely there are some bugs in \fBwhawty\-alerts\fR\&. If you find a bug, please let the developers know at http://github\&.com/whawty/alerts\&. Of course, pull requests are preferred\&.
+.SH "SEE ALSO"
+.sp
+\fBpam\-whawty\fR(8)
+.SH "AUTHORS"
+.sp
+Christian Pointner <equinox@spreadspace\&.org>
+.SH "RESOURCES"
+.sp
+Main web site: http://github\&.com/whawty/alerts

@@ -1,0 +1,89 @@
+whawty-alerts(8)
+================
+
+NAME
+----
+
+whawty-alerts - the simple alert manager
+
+
+SYNOPSIS
+--------
+
+*whawty-alerts*  '[global options]' *<command>* '[command options]' '[arguments ... ]'
+
+
+DESCRIPTION
+-----------
+
+*whawty-alerts* is a simple daemon that handles notifications for monitoring alerts from
+the Prometheus Alertmanager. Notifications can be sent via eMail as well as SMS. Unless
+most other solutions whawty.alerts tries to be of use without access to the internet.
+This means sending eMails and SMS is not done using the API of some cloud provider but
+rather using local resources such as GSM modems connected via USB.
+
+
+GLOBAL OPTIONS
+--------------
+
+The following global options can be passed to *whawty-alerts*.
+
+*-h | --help*::
+    Show help text and exit.
+
+*-v | --version*::
+    Print version information and exit.
+
+
+COMMANDS
+--------
+
+Any of the following commands supports *-h | --help* as an option. This will print
+extra help information for the command. All these commands use the auth store directory
+as specified by the global store configuration file.
+
+run '[options]'
+~~~~~~~~~~~~~~~
+
+...tbd...
+
+runsa
+~~~~~
+
+This is basically the same as *run* but expects all sockets to be passed via systemd
+socket activation. *whawty-alerts* will run the web-api on all TCP sockets. All other
+socket types are ignored.
+
+
+SIGNALS
+-------
+
+On HUP *whawty-alerts* tries to reload the configuration. I also runs a basic
+consistency check. If there is any error during that process the old configuration
+will be kept.
+
+
+BUGS
+----
+
+Most likely there are some bugs in *whawty-alerts*. If you find a bug, please let
+the developers know at http://github.com/whawty/alerts. Of course, pull requests
+are preferred.
+
+
+SEE ALSO
+--------
+
+*pam-whawty*(8)
+
+
+AUTHORS
+-------
+
+Christian Pointner <equinox@spreadspace.org>
+
+
+RESOURCES
+---------
+
+Main web site: http://github.com/whawty/alerts
