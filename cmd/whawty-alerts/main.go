@@ -31,11 +31,14 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/urfave/cli"
+	"github.com/whawty/alerts/store"
 )
 
 var (
@@ -49,13 +52,63 @@ func init() {
 	}
 }
 
+func cmdRun(c *cli.Context) error {
+	s, err := store.Open("test.db")
+	if err != nil {
+		return cli.NewExitError(err.Error(), 3)
+	}
+
+	var webc *webConfig
+	if c.String("web-config") != "" {
+		webc, err = readWebConfig(c.String("web-config"))
+		if err != nil {
+			return cli.NewExitError(err.Error(), 1)
+		}
+	}
+	webAddrs := c.StringSlice("web-addr")
+
+	var wg sync.WaitGroup
+	for _, webAddr := range webAddrs {
+		a := webAddr
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := runWebAddr(a, webc, s); err != nil {
+				fmt.Printf("warning running web interface(%s) failed: %s\n", a, err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	return cli.NewExitError(fmt.Sprintf("shutting down since all listening sockets have closed."), 0)
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "whawty-alerts"
 	app.Version = "0.1"
 	app.Usage = "simple alert manager"
 	app.Flags = []cli.Flag{}
-	app.Commands = []cli.Command{}
+	app.Commands = []cli.Command{
+		{
+			Name:  "run",
+			Usage: "run the alert manager",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "web-config",
+					Value:  "",
+					Usage:  "path to the web configuration file",
+					EnvVar: "WHAWTY_ALERTS_WEB_CONFIG",
+				},
+				cli.StringSliceFlag{
+					Name:   "web-addr",
+					Usage:  "address to listen on for web API",
+					EnvVar: "WHAWTY_ALERTS_WEB_ADDR",
+				},
+			},
+			Action: cmdRun,
+		},
+	}
 
 	wdl.Printf("calling app.Run()")
 	app.Run(os.Args)
