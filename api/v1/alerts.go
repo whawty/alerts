@@ -34,6 +34,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/whawty/alerts/store"
 )
 
 func (api *API) ListAlerts(c *gin.Context) {
@@ -54,6 +55,23 @@ func (api *API) ReadAlert(c *gin.Context) {
 	id := c.Param("alert-id")
 
 	alert, err := api.store.GetAlert(id)
+	if err != nil {
+		sendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, alert)
+}
+
+func (api *API) UpdateAlertState(c *gin.Context) {
+	id := c.Param("alert-id")
+
+	var state store.AlertState
+	if err := state.FromString(c.Query("state")); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	alert, err := api.store.SetAlertState(id, state)
 	if err != nil {
 		sendError(c, err)
 		return

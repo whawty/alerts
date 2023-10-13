@@ -45,6 +45,11 @@ func (s *Store) GetAlert(id string) (*Alert, error) {
 	return nil, ErrNotImplemented
 }
 
+func (s *Store) SetAlertState(id string, new AlertState) (*Alert, error) {
+	// TODO: implement this
+	return nil, ErrNotImplemented
+}
+
 func (s *Store) DeleteAlert(id string) error {
 	// TODO: implement this
 	return ErrNotImplemented

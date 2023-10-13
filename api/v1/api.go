@@ -53,6 +53,7 @@ func InstallHTTPHandler(r *gin.RouterGroup, st *store.Store) {
 	{
 		alerts.GET("", api.ListAlerts)
 		alerts.GET(":alert-id", api.ReadAlert)
+		alerts.PATCH(":alert-id/state", api.UpdateAlertState)
 		alerts.DELETE(":alert-id", api.DeleteAlert)
 	}
 

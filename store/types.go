@@ -32,18 +32,131 @@ package store
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
+
+// Errors
 
 var (
 	ErrNotImplemented = errors.New("not implemented")
 	ErrNotFound       = errors.New("not found")
 )
 
+type ErrInvalidStateTransition struct {
+	old AlertState
+	new AlertState
+}
+
+func (e ErrInvalidStateTransition) Error() string {
+	return fmt.Sprintf("invalid alert state transition: %s -> %s", e.old.String(), e.new.String())
+}
+
+// Alerts
+
+type AlertState uint
+
+const (
+	StateNew AlertState = iota
+	StateOpen
+	StateAcknowledged
+	StateStale
+	StateClosed
+)
+
+func (s AlertState) String() string {
+	switch s {
+	case StateNew:
+		return "new"
+	case StateOpen:
+		return "open"
+	case StateAcknowledged:
+		return "acknowledged"
+	case StateStale:
+		return "stale"
+	case StateClosed:
+		return "closed"
+	}
+	return "unknown"
+}
+
+func (s *AlertState) FromString(str string) error {
+	switch str {
+	case "new":
+		*s = StateNew
+	case "open":
+		*s = StateOpen
+	case "acknowledged":
+		*s = StateAcknowledged
+	case "stale":
+		*s = StateStale
+	case "closed":
+		*s = StateClosed
+	default:
+		return errors.New("invalid alert state: '" + str + "'")
+	}
+	return nil
+}
+
+func (s AlertState) MarshalText() (data []byte, err error) {
+	data = []byte(s.String())
+	return
+}
+
+func (s *AlertState) UnmarshalText(data []byte) (err error) {
+	return s.FromString(string(data))
+}
+
+type AlertSeverity uint
+
+const (
+	SeverityCritical AlertSeverity = iota
+	SeverityWarning
+	SeverityInformational
+)
+
+func (s AlertSeverity) String() string {
+	switch s {
+	case SeverityCritical:
+		return "critical"
+	case SeverityWarning:
+		return "warning"
+	case SeverityInformational:
+		return "informational"
+	}
+	return "unknown"
+}
+
+func (s *AlertSeverity) FromString(str string) error {
+	switch str {
+	case "critical":
+		*s = SeverityCritical
+	case "warning":
+		*s = SeverityWarning
+	case "informational":
+		*s = SeverityInformational
+	default:
+		return errors.New("invalid alert severity: '" + str + "'")
+	}
+	return nil
+}
+
+func (s AlertSeverity) MarshalText() (data []byte, err error) {
+	data = []byte(s.String())
+	return
+}
+
+func (s *AlertSeverity) UnmarshalText(data []byte) (err error) {
+	return s.FromString(string(data))
+}
+
 type Alert struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created"`
-	UpdatedAt time.Time `json:"updated"`
+	ID        string        `json:"id"`
+	CreatedAt time.Time     `json:"created"`
+	UpdatedAt time.Time     `json:"updated"`
+	Name      string        `json:"name"`
+	State     AlertState    `json:"state"`
+	Severity  AlertSeverity `json:"severity"`
 }
 
 func (a Alert) String() string {

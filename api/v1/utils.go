@@ -42,11 +42,16 @@ func statusCodeFromError(err error) (code int, response ErrorResponse) {
 	code = http.StatusInternalServerError
 	response = ErrorResponse{Error: err.Error()}
 
-	switch err {
-	case store.ErrNotImplemented:
-		code = http.StatusNotImplemented
-	case store.ErrNotFound:
-		code = http.StatusNotFound
+	switch err.(type) {
+	case store.ErrInvalidStateTransition:
+		code = http.StatusConflict
+	default:
+		switch err {
+		case store.ErrNotImplemented:
+			code = http.StatusNotImplemented
+		case store.ErrNotFound:
+			code = http.StatusNotFound
+		}
 	}
 	return
 }
