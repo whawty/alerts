@@ -1,4 +1,4 @@
-//go:generate go run assets_generate.go
+//go:generate go run generate_vfsdata.go
 //
 // Copyright (c) 2023 whawty contributors (see AUTHORS file)
 // All rights reserved.
