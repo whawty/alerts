@@ -28,23 +28,32 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package store
+package notifier
 
 import (
+	"context"
 	"io"
 	"log"
+	"time"
 
-	bolt "go.etcd.io/bbolt"
+	"github.com/whawty/alerts/store"
 )
 
-type Store struct {
+type Notifier struct {
 	conf    *Config
-	db      *bolt.DB
+	store   *store.Store
 	infoLog *log.Logger
 	dbgLog  *log.Logger
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
-func Open(conf *Config, infoLog, dbgLog *log.Logger) (s *Store, err error) {
+func (n *Notifier) Close() error {
+	n.cancel()
+	return nil
+}
+
+func NewNotifier(conf *Config, st *store.Store, infoLog, dbgLog *log.Logger) (n *Notifier, err error) {
 	if infoLog == nil {
 		infoLog = log.New(io.Discard, "", 0)
 	}
@@ -52,12 +61,14 @@ func Open(conf *Config, infoLog, dbgLog *log.Logger) (s *Store, err error) {
 		dbgLog = log.New(io.Discard, "", 0)
 	}
 
-	s = &Store{conf: conf, infoLog: infoLog, dbgLog: dbgLog}
-	s.db, err = bolt.Open(conf.Path, 0600, nil)
-	infoLog.Printf("store: opened database %s", s.conf.Path)
-	return
-}
+	n = &Notifier{conf: conf, store: st, infoLog: infoLog, dbgLog: dbgLog}
+	n.ctx, n.cancel = context.WithCancel(context.Background())
+	if n.conf.Interval <= 0 {
+		n.conf.Interval = 1 * time.Minute
+	}
 
-func (s *Store) Close() error {
-	return s.db.Close()
+	// TODO: start go-routine to handle notfications
+
+	infoLog.Printf("notifier: started with evaluation interval %s", conf.Interval.String())
+	return
 }

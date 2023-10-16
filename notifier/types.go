@@ -28,36 +28,18 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package store
+package notifier
 
 import (
-	"io"
-	"log"
-
-	bolt "go.etcd.io/bbolt"
+	"time"
 )
 
-type Store struct {
-	conf    *Config
-	db      *bolt.DB
-	infoLog *log.Logger
-	dbgLog  *log.Logger
+type NotifierTarget struct {
+	Type string `yaml:"type"`
+	// TODO: other fields?
 }
 
-func Open(conf *Config, infoLog, dbgLog *log.Logger) (s *Store, err error) {
-	if infoLog == nil {
-		infoLog = log.New(io.Discard, "", 0)
-	}
-	if dbgLog == nil {
-		dbgLog = log.New(io.Discard, "", 0)
-	}
-
-	s = &Store{conf: conf, infoLog: infoLog, dbgLog: dbgLog}
-	s.db, err = bolt.Open(conf.Path, 0600, nil)
-	infoLog.Printf("store: opened database %s", s.conf.Path)
-	return
-}
-
-func (s *Store) Close() error {
-	return s.db.Close()
+type Config struct {
+	Interval time.Duration    `yaml:"interval"`
+	Targets  []NotifierTarget `yaml:"targets"`
 }

@@ -38,6 +38,7 @@ import (
 	"sync"
 
 	"github.com/urfave/cli"
+	"github.com/whawty/alerts/notifier"
 	"github.com/whawty/alerts/store"
 )
 
@@ -53,27 +54,30 @@ func init() {
 }
 
 func cmdRun(c *cli.Context) error {
-	s, err := store.Open("test.db")
+	conf, err := readConfig(c.GlobalString("config"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
+	s, err := store.Open(&conf.Store, wl, wdl)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 3)
 	}
-
-	var webc *webConfig
-	if c.String("web-config") != "" {
-		webc, err = readWebConfig(c.String("web-config"))
-		if err != nil {
-			return cli.NewExitError(err.Error(), 1)
-		}
+	defer s.Close()
+	n, err := notifier.NewNotifier(&conf.Notifier, s, wl, wdl)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 3)
 	}
-	webAddrs := c.StringSlice("web-addr")
+	defer n.Close()
 
+	webAddrs := c.StringSlice("web-addr")
 	var wg sync.WaitGroup
 	for _, webAddr := range webAddrs {
 		a := webAddr
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if err := runWebAddr(a, webc, s); err != nil {
+			if err := runWebAddr(a, &conf.Web, s); err != nil {
 				fmt.Printf("warning running web interface(%s) failed: %s\n", a, err)
 			}
 		}()
@@ -88,18 +92,19 @@ func main() {
 	app.Name = "whawty-alerts"
 	app.Version = "0.1"
 	app.Usage = "simple alert manager"
-	app.Flags = []cli.Flag{}
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "config",
+			Value:  "/etc/whawty/alerts.yaml",
+			Usage:  "path to the configuration file",
+			EnvVar: "WHAWTY_ALERTS_CONFIG",
+		},
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:  "run",
 			Usage: "run the alert manager",
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "web-config",
-					Value:  "",
-					Usage:  "path to the web configuration file",
-					EnvVar: "WHAWTY_ALERTS_WEB_CONFIG",
-				},
 				cli.StringSliceFlag{
 					Name:   "web-addr",
 					Usage:  "address to listen on for web API",

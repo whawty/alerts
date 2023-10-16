@@ -36,6 +36,12 @@ import (
 	"time"
 )
 
+// Configuration
+
+type Config struct {
+	Path string `yaml:"path"`
+}
+
 // Errors
 
 var (

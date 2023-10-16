@@ -31,18 +31,14 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spreadspace/tlsconfig"
 	apiV1 "github.com/whawty/alerts/api/v1"
 	"github.com/whawty/alerts/store"
 	"github.com/whawty/alerts/ui"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -50,28 +46,7 @@ const (
 	WebAPIv1Prefix  = "/api/v1/"
 )
 
-type webConfig struct {
-	TLS *tlsconfig.TLSConfig `yaml:"tls"`
-}
-
-func readWebConfig(configfile string) (*webConfig, error) {
-	file, err := os.Open(configfile)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	decoder := yaml.NewDecoder(file)
-	decoder.KnownFields(true)
-
-	c := &webConfig{}
-	if err = decoder.Decode(c); err != nil {
-		return nil, fmt.Errorf("Error parsing config file: %s", err)
-	}
-	return c, nil
-}
-
-func runWeb(listener net.Listener, config *webConfig, st *store.Store) (err error) {
+func runWeb(listener net.Listener, config *WebConfig, st *store.Store) (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.New()
@@ -97,7 +72,7 @@ func runWeb(listener net.Listener, config *webConfig, st *store.Store) (err erro
 	return server.Serve(listener)
 }
 
-func runWebAddr(addr string, config *webConfig, store *store.Store) (err error) {
+func runWebAddr(addr string, config *WebConfig, store *store.Store) (err error) {
 	if addr == "" {
 		addr = ":http"
 	}
@@ -108,6 +83,6 @@ func runWebAddr(addr string, config *webConfig, store *store.Store) (err error) 
 	return runWeb(ln.(*net.TCPListener), config, store)
 }
 
-func runWebListener(listener *net.TCPListener, config *webConfig, store *store.Store) (err error) {
+func runWebListener(listener *net.TCPListener, config *WebConfig, store *store.Store) (err error) {
 	return runWeb(listener, config, store)
 }

@@ -1,4 +1,4 @@
 /whawty-alerts
 /cmd/whawty-alerts/whawty-alerts
 .coverprofile
-/test.db
+/contrib/test.db

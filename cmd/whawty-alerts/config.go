@@ -28,36 +28,41 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package store
+package main
 
 import (
-	"io"
-	"log"
+	"fmt"
+	"os"
 
-	bolt "go.etcd.io/bbolt"
+	"github.com/spreadspace/tlsconfig"
+	"github.com/whawty/alerts/notifier"
+	"github.com/whawty/alerts/store"
+	"gopkg.in/yaml.v3"
 )
 
-type Store struct {
-	conf    *Config
-	db      *bolt.DB
-	infoLog *log.Logger
-	dbgLog  *log.Logger
+type WebConfig struct {
+	TLS *tlsconfig.TLSConfig `yaml:"tls"`
 }
 
-func Open(conf *Config, infoLog, dbgLog *log.Logger) (s *Store, err error) {
-	if infoLog == nil {
-		infoLog = log.New(io.Discard, "", 0)
-	}
-	if dbgLog == nil {
-		dbgLog = log.New(io.Discard, "", 0)
-	}
-
-	s = &Store{conf: conf, infoLog: infoLog, dbgLog: dbgLog}
-	s.db, err = bolt.Open(conf.Path, 0600, nil)
-	infoLog.Printf("store: opened database %s", s.conf.Path)
-	return
+type Config struct {
+	Store    store.Config    `yaml:"store"`
+	Notifier notifier.Config `yaml:"notifer"`
+	Web      WebConfig       `yaml:"web"`
 }
 
-func (s *Store) Close() error {
-	return s.db.Close()
+func readConfig(configfile string) (*Config, error) {
+	file, err := os.Open(configfile)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening config file: %s", err)
+	}
+	defer file.Close()
+
+	decoder := yaml.NewDecoder(file)
+	decoder.KnownFields(true)
+
+	c := &Config{}
+	if err = decoder.Decode(c); err != nil {
+		return nil, fmt.Errorf("Error parsing config file: %s", err)
+	}
+	return c, nil
 }
