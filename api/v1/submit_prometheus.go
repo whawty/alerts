@@ -39,23 +39,24 @@ import (
 	"github.com/whawty/alerts/store"
 )
 
-func alertFromAlertmanagerMessage(msg *amWebhook.Message) *store.Alert {
+func alertFromPrometheusAlertmanagerMessage(msg *amWebhook.Message) *store.Alert {
 	// TODO: implement this
+
 	return &store.Alert{}
 }
 
-func (api *API) SubmitAlertmanager(c *gin.Context) {
+func (api *API) SubmitPrometheus(c *gin.Context) {
 	msg := &amWebhook.Message{}
 	err := json.NewDecoder(c.Request.Body).Decode(msg)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "error decoding alertmanager message: " + err.Error()})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "error decoding prometheus-alertmanager message: " + err.Error()})
 		return
 	}
 
-	alert := alertFromAlertmanagerMessage(msg)
+	alert := alertFromPrometheusAlertmanagerMessage(msg)
 	if alert, err = api.store.CreateAlert(alert); err != nil {
 		sendError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, alert)
+	c.JSON(http.StatusCreated, nil)
 }

@@ -31,9 +31,11 @@
 package v1
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/oklog/ulid/v2"
 	"github.com/whawty/alerts/store"
 )
 
@@ -49,6 +51,23 @@ func (api *API) ListAlerts(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, AlertsListing{alerts})
+}
+
+func (api *API) CreateAlert(c *gin.Context) {
+	alert := &store.Alert{}
+	err := json.NewDecoder(c.Request.Body).Decode(alert)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "error decoding alert: " + err.Error()})
+		return
+	}
+	alert.State = store.StateNew
+	alert.ID = ulid.Make().String()
+
+	if alert, err = api.store.CreateAlert(alert); err != nil {
+		sendError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, alert)
 }
 
 func (api *API) ReadAlert(c *gin.Context) {

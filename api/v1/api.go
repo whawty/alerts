@@ -52,6 +52,7 @@ func InstallHTTPHandler(r *gin.RouterGroup, st *store.Store) {
 	alerts := r.Group("alerts")
 	{
 		alerts.GET("", api.ListAlerts)
+		alerts.POST("", api.CreateAlert)
 		alerts.GET(":alert-id", api.ReadAlert)
 		alerts.PATCH(":alert-id/state", api.UpdateAlertState)
 		alerts.DELETE(":alert-id", api.DeleteAlert)
@@ -59,6 +60,6 @@ func InstallHTTPHandler(r *gin.RouterGroup, st *store.Store) {
 
 	submit := r.Group("submit")
 	{
-		submit.POST("alertmanager", api.SubmitAlertmanager)
+		submit.POST("prometheus", api.SubmitPrometheus)
 	}
 }
