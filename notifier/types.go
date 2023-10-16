@@ -31,15 +31,59 @@
 package notifier
 
 import (
+	"context"
 	"time"
+
+	"github.com/whawty/alerts/store"
 )
 
+type NotifierBackendConfigEMail struct {
+	From      string `yaml:"from"`
+	Smarthost string `yaml:"smarthost"`
+	// TODO: add auth and TLS support
+}
+
+type NotifierBackendConfigSMSModem struct {
+	Device   string        `yaml:"device"`
+	Baudrate int           `yaml:"baudrate"`
+	Timeout  time.Duration `yaml:"timeout"`
+	Pin      *uint         `yaml:"pin"`
+}
+
+type NotifierBackendConfig struct {
+	Name     string
+	EMail    *NotifierBackendConfigEMail    `yaml:"email"`
+	SMSModem *NotifierBackendConfigSMSModem `yaml:"smsModem"`
+}
+
+type NotifierTargetSMS struct {
+	Number string `yaml:"number"`
+}
+
+type NotifierTargetEMail struct {
+	TO  []string `yaml:"to"`
+	CC  []string `yaml:"cc"`
+	BCC []string `yaml:"bcc"`
+}
+
 type NotifierTarget struct {
-	Type string `yaml:"type"`
-	// TODO: other fields?
+	Name    string               `yaml:"name"`
+	Backend string               `yaml:"backend"`
+	EMail   *NotifierTargetEMail `yaml:"email"`
+	SMS     *NotifierTargetSMS   `yaml:"sms"`
 }
 
 type Config struct {
-	Interval time.Duration    `yaml:"interval"`
-	Targets  []NotifierTarget `yaml:"targets"`
+	Interval time.Duration           `yaml:"interval"`
+	Backends []NotifierBackendConfig `yaml:"backends"`
+	Targets  []NotifierTarget        `yaml:"targets"`
+}
+
+// Interfaces
+
+type NotifierBackend interface {
+	Init() error
+	Ready() bool
+	Notify(context.Context, NotifierTarget, *store.Alert) error
+	Close() error
 }

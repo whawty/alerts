@@ -46,7 +46,7 @@ type WebConfig struct {
 
 type Config struct {
 	Store    store.Config    `yaml:"store"`
-	Notifier notifier.Config `yaml:"notifer"`
+	Notifier notifier.Config `yaml:"notifier"`
 	Web      WebConfig       `yaml:"web"`
 }
 

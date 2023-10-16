@@ -1,2 +1,14 @@
 store:
   path: ./contrib/test.db
+notifier:
+  backends:
+  - name: mail-foo
+    email:
+      from: noreply@example.com
+      smarthost: mailrelay.example.com
+  - name: sms-bar
+    smsModem:
+      device: /dev/ttyUSB0
+      baudrate: 115200
+      timeout: 10s
+      pin: 1234

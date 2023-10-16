@@ -40,12 +40,13 @@ import (
 )
 
 type Notifier struct {
-	conf    *Config
-	store   *store.Store
-	infoLog *log.Logger
-	dbgLog  *log.Logger
-	ctx     context.Context
-	cancel  context.CancelFunc
+	conf     *Config
+	store    *store.Store
+	infoLog  *log.Logger
+	dbgLog   *log.Logger
+	ctx      context.Context
+	cancel   context.CancelFunc
+	backends map[string]NotifierBackend
 }
 
 func (n *Notifier) Close() error {
@@ -67,8 +68,47 @@ func NewNotifier(conf *Config, st *store.Store, infoLog, dbgLog *log.Logger) (n 
 		n.conf.Interval = 1 * time.Minute
 	}
 
+	n.backends = make(map[string]NotifierBackend)
+	for idx, backend := range n.conf.Backends {
+		if backend.Name == "" {
+			infoLog.Printf("notifier: ignoring unnamed backend at index %d", idx)
+			continue // make this an permanent error??
+		}
+		if _, ok := n.backends[backend.Name]; ok {
+			infoLog.Printf("notifier: ignoring duplicate backend name at index %d", idx)
+			continue // make this an permanent error??
+		}
+
+		var b NotifierBackend
+		cnt := 0
+		if backend.EMail != nil {
+			b = NewEMailBackend(backend.Name, backend.EMail, infoLog, dbgLog)
+			cnt = cnt + 1
+		}
+		if backend.SMSModem != nil {
+			b = NewSMSModemBackend(backend.Name, backend.SMSModem, infoLog, dbgLog)
+			cnt = cnt + 1
+		}
+		if cnt == 0 {
+			infoLog.Printf("notifier: no valid backend config found for backend '%s'", backend.Name)
+			continue
+		}
+		if cnt > 1 {
+			infoLog.Printf("notifier: ambiguous backend config '%s'", backend.Name)
+			continue
+		}
+		n.backends[backend.Name] = b
+
+		if err := b.Init(); err != nil {
+			infoLog.Printf("notifier: failed to initialize backend '%s': %v", backend.Name, err)
+		} else {
+			infoLog.Printf("notifier: backend '%s' successfully initialized", backend.Name)
+		}
+	}
+
+	// TODO: start go-routine to re-initialize failed backends
 	// TODO: start go-routine to handle notfications
 
-	infoLog.Printf("notifier: started with evaluation interval %s", conf.Interval.String())
+	infoLog.Printf("notifier: started with %d backends and evaluation interval %s", len(n.backends), conf.Interval.String())
 	return
 }
