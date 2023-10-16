@@ -32,6 +32,7 @@ package notifier
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -51,6 +52,11 @@ type Notifier struct {
 
 func (n *Notifier) Close() error {
 	n.cancel()
+	for _, backend := range n.backends {
+		if backend.Ready() {
+			backend.Close()
+		}
+	}
 	return nil
 }
 
@@ -71,12 +77,12 @@ func NewNotifier(conf *Config, st *store.Store, infoLog, dbgLog *log.Logger) (n 
 	n.backends = make(map[string]NotifierBackend)
 	for idx, backend := range n.conf.Backends {
 		if backend.Name == "" {
-			infoLog.Printf("notifier: ignoring unnamed backend at index %d", idx)
-			continue // make this an permanent error??
+			err = fmt.Errorf("found unnamed backend at config index %d", idx)
+			return
 		}
-		if _, ok := n.backends[backend.Name]; ok {
-			infoLog.Printf("notifier: ignoring duplicate backend name at index %d", idx)
-			continue // make this an permanent error??
+		if _, exists := n.backends[backend.Name]; exists {
+			err = fmt.Errorf("found duplicate backend name at config index %d", idx)
+			return
 		}
 
 		var b NotifierBackend
@@ -90,12 +96,12 @@ func NewNotifier(conf *Config, st *store.Store, infoLog, dbgLog *log.Logger) (n 
 			cnt = cnt + 1
 		}
 		if cnt == 0 {
-			infoLog.Printf("notifier: no valid backend config found for backend '%s'", backend.Name)
-			continue
+			err = fmt.Errorf("no valid backend config found for backend '%s'", backend.Name)
+			return
 		}
 		if cnt > 1 {
-			infoLog.Printf("notifier: ambiguous backend config '%s'", backend.Name)
-			continue
+			err = fmt.Errorf("backend '%s' has ambiguous backend config", backend.Name)
+			return
 		}
 		n.backends[backend.Name] = b
 

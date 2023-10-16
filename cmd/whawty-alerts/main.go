@@ -61,12 +61,12 @@ func cmdRun(c *cli.Context) error {
 
 	s, err := store.Open(&conf.Store, wl, wdl)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 3)
+		return cli.NewExitError(fmt.Sprintf("failed to initialize store: %v", err), 3)
 	}
 	defer s.Close()
 	n, err := notifier.NewNotifier(&conf.Notifier, s, wl, wdl)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 3)
+		return cli.NewExitError(fmt.Sprintf("failed to initialize notifier: %v", err), 3)
 	}
 	defer n.Close()
 
