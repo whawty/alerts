@@ -75,7 +75,7 @@ func (smb *SMSModemBackend) Init() (err error) {
 			smb.modem = nil
 			return
 		}
-		smb.dbgLog.Printf("SMSModem(%s): enter pin code respone: %v", smb.name, resp)
+		smb.dbgLog.Printf("SMSModem(%s): enter pin code response: %v", smb.name, resp)
 	}
 
 	smb.sms = gsm.New(a)
