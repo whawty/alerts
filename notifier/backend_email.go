@@ -34,6 +34,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/whawty/alerts/store"
 )
@@ -44,26 +45,46 @@ type EMailBackend struct {
 	name    string
 	conf    *NotifierBackendConfigEMail
 	// TODO: add client config
+	mutex *sync.RWMutex
 }
 
 func NewEMailBackend(name string, conf *NotifierBackendConfigEMail, infoLog, dbgLog *log.Logger) *EMailBackend {
-	return &EMailBackend{name: name, conf: conf, infoLog: infoLog, dbgLog: dbgLog}
+	return &EMailBackend{name: name, conf: conf, infoLog: infoLog, dbgLog: dbgLog, mutex: &sync.RWMutex{}}
 }
 
 func (emb *EMailBackend) Init() (err error) {
+	emb.mutex.Lock()
+	defer emb.mutex.Unlock()
+
 	return fmt.Errorf("not yet implemented!")
 }
 
-func (smb *EMailBackend) Ready() bool {
+func (emb *EMailBackend) ready() bool {
 	// TODO: implement this
 	return false
 }
 
-func (emb *EMailBackend) Notify(ctx context.Context, target NotifierTarget, alert *store.Alert) error {
-	return fmt.Errorf("not yet implemented!")
+func (emb *EMailBackend) Ready() bool {
+	emb.mutex.RLock()
+	defer emb.mutex.RUnlock()
+
+	return emb.ready()
+}
+
+func (emb *EMailBackend) Notify(ctx context.Context, target NotifierTarget, alert *store.Alert) (bool, error) {
+	emb.mutex.RLock()
+	defer emb.mutex.RUnlock()
+
+	if target.EMail == nil || !emb.ready() {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("not yet implemented!")
 }
 
 func (emb *EMailBackend) Close() error {
+	emb.mutex.Lock()
+	defer emb.mutex.Unlock()
 	// TODO: close client?
 	return nil
 }

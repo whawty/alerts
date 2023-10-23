@@ -14,6 +14,5 @@ notifier:
 #      pin: 1234
   targets:
   - name: hugo
-    backend: sms-bar
-    sms:
-      number: +1555123456789
+    sms: +1555123456789
+    email: hugo@example.com

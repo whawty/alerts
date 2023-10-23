@@ -56,21 +56,13 @@ type NotifierBackendConfig struct {
 	SMSModem *NotifierBackendConfigSMSModem `yaml:"smsModem"`
 }
 
-type NotifierTargetSMS struct {
-	Number string `yaml:"number"`
-}
-
-type NotifierTargetEMail struct {
-	TO  []string `yaml:"to"`
-	CC  []string `yaml:"cc"`
-	BCC []string `yaml:"bcc"`
-}
+type NotifierTargetSMS string
+type NotifierTargetEMail string
 
 type NotifierTarget struct {
-	Name    string               `yaml:"name"`
-	Backend string               `yaml:"backend"`
-	EMail   *NotifierTargetEMail `yaml:"email"`
-	SMS     *NotifierTargetSMS   `yaml:"sms"`
+	Name  string               `yaml:"name"`
+	EMail *NotifierTargetEMail `yaml:"email"`
+	SMS   *NotifierTargetSMS   `yaml:"sms"`
 }
 
 type Config struct {
@@ -84,6 +76,6 @@ type Config struct {
 type NotifierBackend interface {
 	Init() error
 	Ready() bool
-	Notify(context.Context, NotifierTarget, *store.Alert) error
+	Notify(context.Context, NotifierTarget, *store.Alert) (bool, error)
 	Close() error
 }

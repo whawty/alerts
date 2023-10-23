@@ -35,6 +35,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/warthog618/modem/at"
@@ -50,16 +51,20 @@ type SMSModemBackend struct {
 	conf    *NotifierBackendConfigSMSModem
 	modem   io.ReadWriteCloser
 	sms     *gsm.GSM
+	mutex   *sync.RWMutex
 }
 
 func NewSMSModemBackend(name string, conf *NotifierBackendConfigSMSModem, infoLog, dbgLog *log.Logger) *SMSModemBackend {
 	if conf.Timeout <= 0 {
 		conf.Timeout = 5 * time.Second
 	}
-	return &SMSModemBackend{name: name, conf: conf, infoLog: infoLog, dbgLog: dbgLog}
+	return &SMSModemBackend{name: name, conf: conf, infoLog: infoLog, dbgLog: dbgLog, mutex: &sync.RWMutex{}}
 }
 
 func (smb *SMSModemBackend) Init() (err error) {
+	smb.mutex.Lock()
+	defer smb.mutex.Unlock()
+
 	smb.modem, err = serial.New(serial.WithPort(smb.conf.Device), serial.WithBaud(smb.conf.Baudrate))
 	if err != nil {
 		smb.modem = nil
@@ -105,23 +110,39 @@ func (smb *SMSModemBackend) Init() (err error) {
 	return nil
 }
 
-func (smb *SMSModemBackend) Ready() bool {
+func (smb *SMSModemBackend) ready() bool {
 	return smb.modem != nil && smb.sms != nil
 }
 
-func (smb *SMSModemBackend) Notify(ctx context.Context, target NotifierTarget, alert *store.Alert) error {
+func (smb *SMSModemBackend) Ready() bool {
+	smb.mutex.RLock()
+	defer smb.mutex.RUnlock()
+	return smb.ready()
+}
+
+func (smb *SMSModemBackend) Notify(ctx context.Context, target NotifierTarget, alert *store.Alert) (bool, error) {
+	smb.mutex.RLock()
+	defer smb.mutex.RUnlock()
+
+	if target.SMS == nil || !smb.ready() {
+		return false, nil
+	}
+
 	// TODO: improve alert formatting
 	message := fmt.Sprintf("%v %s | %v %s | %s", alert.State.Emoji(), alert.State, alert.Severity.Emoji(), alert.Severity, alert.Name)
 
-	resp, err := smb.sms.SendLongMessage(target.SMS.Number, message)
+	resp, err := smb.sms.SendLongMessage(string(*target.SMS), message)
 	if err != nil {
-		return err
+		return false, err
 	}
 	smb.dbgLog.Printf("SMSModem(%s): send sms response: %v", smb.name, resp)
-	return nil
+	return true, nil
 }
 
 func (smb *SMSModemBackend) Close() error {
+	smb.mutex.Lock()
+	defer smb.mutex.Unlock()
+
 	smb.sms.StopMessageRx()
 	smb.modem.Close()
 	smb.modem = nil

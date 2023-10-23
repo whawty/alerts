@@ -120,16 +120,15 @@ func NewNotifier(conf *Config, st *store.Store, infoLog, dbgLog *log.Logger) (n 
 	a.Severity = store.SeverityCritical
 	a.Name = "This is just a drill!"
 	for _, t := range n.conf.Targets {
-		b := n.backends[t.Backend]
-		if b == nil {
-			infoLog.Printf("notifier: failed to notify '%+v': unknown backend '%s'", t, t.Backend)
-			continue
-		}
-
-		if err := b.Notify(context.TODO(), t, a); err != nil {
-			infoLog.Printf("notifier: failed to notify '%+v': %v", t, err)
-		} else {
-			infoLog.Printf("notifier: sent notification to '%+v'", t)
+		for bName, b := range n.backends {
+			sent, err := b.Notify(context.TODO(), t, a)
+			if err != nil {
+				infoLog.Printf("notifier: failed to notify '%s' via backend '%s': %v", t.Name, bName, err)
+				continue
+			}
+			if sent {
+				infoLog.Printf("notifier: sent notification to '%s' via backend '%s'", t.Name, bName)
+			}
 		}
 	}
 
