@@ -68,8 +68,9 @@ func (smb *SMSModemBackend) Init() (err error) {
 
 	a := at.New(smb.modem, at.WithTimeout(smb.conf.Timeout))
 	if smb.conf.Pin != nil {
+		smb.dbgLog.Printf("SMSModem(%s): trying to enter PIN code: %d", smb.name, *smb.conf.Pin)
 		var resp []string
-		resp, err = a.Command(fmt.Sprintf("+CPIN=%d", smb.conf.Pin))
+		resp, err = a.Command(fmt.Sprintf("+CPIN=%d", *smb.conf.Pin))
 		if err != nil {
 			smb.modem.Close()
 			smb.modem = nil
@@ -110,7 +111,7 @@ func (smb *SMSModemBackend) Ready() bool {
 
 func (smb *SMSModemBackend) Notify(ctx context.Context, target NotifierTarget, alert *store.Alert) error {
 	// TODO: improve alert formatting
-	message := fmt.Sprintf("%s / %s / %s", alert.State, alert.Severity, alert.Name)
+	message := fmt.Sprintf("%v %s | %v %s | %s", alert.State.Emoji(), alert.State, alert.Severity.Emoji(), alert.Severity, alert.Name)
 
 	resp, err := smb.sms.SendLongMessage(target.SMS.Number, message)
 	if err != nil {

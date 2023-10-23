@@ -34,6 +34,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/enescakir/emoji"
 )
 
 // Configuration
@@ -104,6 +106,22 @@ func (s *AlertState) FromString(str string) error {
 	return nil
 }
 
+func (s AlertState) Emoji() emoji.Emoji {
+	switch s {
+	case StateNew:
+		return emoji.GlowingStar
+	case StateOpen:
+		return emoji.Bell
+	case StateAcknowledged:
+		return emoji.BellWithSlash
+	case StateStale:
+		return emoji.QuestionMark
+	case StateClosed:
+		return emoji.CheckMarkButton
+	}
+	return emoji.WhiteQuestionMark
+}
+
 func (s AlertState) MarshalText() (data []byte, err error) {
 	data = []byte(s.String())
 	return
@@ -145,6 +163,18 @@ func (s *AlertSeverity) FromString(str string) error {
 		return errors.New("invalid alert severity: '" + str + "'")
 	}
 	return nil
+}
+
+func (s AlertSeverity) Emoji() emoji.Emoji {
+	switch s {
+	case SeverityCritical:
+		return emoji.DoubleExclamationMark
+	case SeverityWarning:
+		return emoji.Warning
+	case SeverityInformational:
+		return emoji.Information
+	}
+	return emoji.WhiteQuestionMark
 }
 
 func (s AlertSeverity) MarshalText() (data []byte, err error) {

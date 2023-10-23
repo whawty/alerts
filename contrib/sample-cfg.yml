@@ -11,4 +11,9 @@ notifier:
       device: /dev/ttyUSB0
       baudrate: 115200
       timeout: 10s
-      pin: 1234
+#      pin: 1234
+  targets:
+  - name: hugo
+    backend: sms-bar
+    sms:
+      number: +1555123456789
