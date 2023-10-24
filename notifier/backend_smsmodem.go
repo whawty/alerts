@@ -38,10 +38,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flosch/pongo2/v6"
 	"github.com/warthog618/modem/at"
 	"github.com/warthog618/modem/gsm"
 	"github.com/warthog618/modem/serial"
 	"github.com/whawty/alerts/store"
+)
+
+const (
+	// TODO: improve alert formatting
+	defaultTemplate = "{{ alert.State.Emoji() }} {{ alert.State }} | {{ alert.Severity.Emoji() }} {{ alert.Severity }} | {{ alert.Name }}"
 )
 
 type SMSModemBackend struct {
@@ -128,8 +134,18 @@ func (smb *SMSModemBackend) Notify(ctx context.Context, target NotifierTarget, a
 		return false, nil
 	}
 
-	// TODO: improve alert formatting
-	message := fmt.Sprintf("%v %s | %v %s | %s", alert.State.Emoji(), alert.State, alert.Severity.Emoji(), alert.Severity, alert.Name)
+	tmplText := smb.conf.Template
+	if tmplText == "" {
+		tmplText = defaultTemplate
+	}
+	tpl, err := pongo2.FromString(tmplText)
+	if err != nil {
+		return false, err
+	}
+	message, err := tpl.Execute(pongo2.Context{"alert": alert})
+	if err != nil {
+		return false, err
+	}
 
 	resp, err := smb.sms.SendLongMessage(string(*target.SMS), message)
 	if err != nil {

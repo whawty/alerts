@@ -48,6 +48,7 @@ type NotifierBackendConfigSMSModem struct {
 	Baudrate int           `yaml:"baudrate"`
 	Timeout  time.Duration `yaml:"timeout"`
 	Pin      *uint         `yaml:"pin"`
+	Template string        `yaml:"template"`
 }
 
 type NotifierBackendConfig struct {
