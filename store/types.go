@@ -193,8 +193,18 @@ type Alert struct {
 	Name      string        `json:"name"`
 	State     AlertState    `json:"state"`
 	Severity  AlertSeverity `json:"severity"`
+	// TODO: additinial fields
 }
 
 func (a Alert) String() string {
 	return a.ID
+}
+
+// Heartbeats
+
+type Heartbeat struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created"`
+	UpdatedAt time.Time `json:"updated"`
+	// TODO: additinial fields
 }

@@ -28,24 +28,29 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package v1
+package store
 
-import (
-	"github.com/whawty/alerts/store"
-)
-
-// common
-type ErrorResponse struct {
-	Error  string      `json:"error,omitempty"`
-	Detail interface{} `json:"detail,omitempty"`
+func (s *Store) CreateHeartbeat(alert *Heartbeat) (*Heartbeat, error) {
+	// TODO: implement this
+	return nil, ErrNotImplemented
 }
 
-// Alerts
-type AlertsListing struct {
-	Alerts []store.Alert `json:"results"`
+func (s *Store) ListHeartbeats(offset, limit int) ([]Heartbeat, error) {
+	// TODO: implement this
+	return nil, ErrNotImplemented
 }
 
-// Heartbeats
-type HeartbeatsListing struct {
-	Heartbeats []store.Heartbeat `json:"results"`
+func (s *Store) GetHeartbeat(id string) (*Heartbeat, error) {
+	// TODO: implement this
+	return nil, ErrNotImplemented
+}
+
+func (s *Store) RefreshHeartbeat(id string) (*Heartbeat, error) {
+	// TODO: implement this
+	return nil, ErrNotImplemented
+}
+
+func (s *Store) DeleteHeartbeat(id string) error {
+	// TODO: implement this
+	return ErrNotImplemented
 }

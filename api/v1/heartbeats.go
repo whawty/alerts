@@ -31,21 +31,61 @@
 package v1
 
 import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/oklog/ulid/v2"
 	"github.com/whawty/alerts/store"
 )
 
-// common
-type ErrorResponse struct {
-	Error  string      `json:"error,omitempty"`
-	Detail interface{} `json:"detail,omitempty"`
+func (api *API) ListHeartbeats(c *gin.Context) {
+	offset, limit, ok := getPaginationParameter(c)
+	if !ok {
+		return
+	}
+
+	heartbeats, err := api.store.ListHeartbeats(offset, limit)
+	if err != nil {
+		sendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, HeartbeatsListing{heartbeats})
 }
 
-// Alerts
-type AlertsListing struct {
-	Alerts []store.Alert `json:"results"`
+func (api *API) CreateHeartbeat(c *gin.Context) {
+	heartbeat := &store.Heartbeat{}
+	err := json.NewDecoder(c.Request.Body).Decode(heartbeat)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "error decoding heartbeat: " + err.Error()})
+		return
+	}
+	heartbeat.ID = ulid.Make().String()
+
+	if heartbeat, err = api.store.CreateHeartbeat(heartbeat); err != nil {
+		sendError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, heartbeat)
 }
 
-// Heartbeats
-type HeartbeatsListing struct {
-	Heartbeats []store.Heartbeat `json:"results"`
+func (api *API) ReadHeartbeat(c *gin.Context) {
+	id := c.Param("heartbeat-id")
+
+	heartbeat, err := api.store.GetHeartbeat(id)
+	if err != nil {
+		sendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, heartbeat)
+}
+
+func (api *API) DeleteHeartbeat(c *gin.Context) {
+	id := c.Param("heartbeat-id")
+
+	if err := api.store.DeleteHeartbeat(id); err != nil {
+		sendError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
 }

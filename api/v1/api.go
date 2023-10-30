@@ -57,6 +57,13 @@ func InstallHTTPHandler(r *gin.RouterGroup, st *store.Store) {
 		alerts.PATCH(":alert-id/state", api.UpdateAlertState)
 		alerts.DELETE(":alert-id", api.DeleteAlert)
 	}
+	heartbeats := r.Group("heartbeats")
+	{
+		heartbeats.GET("", api.ListHeartbeats)
+		heartbeats.POST("", api.CreateHeartbeat)
+		heartbeats.GET(":heartbeat-id", api.ReadHeartbeat)
+		heartbeats.DELETE(":heartbeat-id", api.DeleteAlert)
+	}
 
 	submit := r.Group("submit")
 	{
